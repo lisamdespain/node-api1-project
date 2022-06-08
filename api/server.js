@@ -37,20 +37,23 @@ server.post('/api/users', (req, res) =>{
     })
     
 // Put: updates a user with specified id with info from the body, returns the user.
-server.put('./api/users', (req, res)=>{
-    Users.update(req.params.id, req.body).then(result =>{
-        if(result == null){
-            res.status(404).json({ message: 'The user with the specified ID does not exist' });
-            return;
-        } else if (req.name == null || req.bio == null){
-            res.status(400).json({ message: 'Please provide name and bio for the user' });
-            return;
-        }
-        res.status(201).json(result);
-    }).catch(err =>{
-        err.status(500).json({ message: 'The user information could not be modified'})
-})
-})
+server.put('/api/users/:id', async (req, res)=>{
+    const user = await Users.findById(req.params.id)
+    const { name, bio } = req.body;
+    if (name == null || bio == null){
+        res.status(400).json({message: 'Please provide name and bio for the user'})
+    } else if (!user) {
+        res.status(404).json({ message: 'The user with the specified ID does not exist' });
+    } else {
+    Users.update(req.params.id, req.body)
+    .then(user => {
+        res.status(200).json(user);
+      })
+      .catch(error => {
+        console.log(error);
+        res.status(500).json({ message: 'The user information could not be modified' });
+      });
+  }});
 // Delete: deletes a user with the specified id and returns the user
 server.delete('/api/users/:id', (req, res) =>{
     Users.remove(req.params.id).then(result =>{
